@@ -18,8 +18,10 @@ const app = express();
 const port = 3000;
 
 app.use(cors({
-  origin:"https://vercel-frontend-six-liart.vercel.app",
-  credentials:true
+   origin: "https://vercel-frontend-six-liart.vercel.app",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.use(express.json());

@@ -4,7 +4,7 @@ import { Order } from "../Model/order.js";
 // create order
 export const createOrder = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const {
       paymentMethod,
@@ -179,7 +179,7 @@ export const updateOrderStatus = async (req, res) => {
 // cancel order
 export const cancelOrder = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { id } = req.params;
 
     const order = await Order.findOne({

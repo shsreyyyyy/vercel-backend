@@ -1,4 +1,4 @@
-import redis from "../config/redis";
+import redis from "../config/redis.jd";
 export const authMiddleware = async (req, res, next) => {
   try {
 

@@ -18,7 +18,7 @@ const app = express();
 const port = 3000;
 
 app.use(cors({
-  origin:["http://localhost:5173","http://localhost:5174"],
+  origin:process.env.FRONTEND_URL,
   credentials:true
 }));
 
@@ -33,6 +33,10 @@ app.use("/order", orderRoutes);
 
 await connectDb()
 
-app.listen(port, (err) => {
+app.listen(port, (req,res) => {
+  res.status(200).json({
+    message:"server is running"
+  })
+
   console.log("server running at ", port);
 });

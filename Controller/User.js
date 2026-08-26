@@ -240,6 +240,7 @@ export const verifyOtp = async (req, res) => {
       });
     }
 
+    await redis.del(`verify:${email}`)
     await redis.del(`otp:${email}`);
     await redis.del(`otpAttempts:${email}`);
 

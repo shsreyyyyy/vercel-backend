@@ -1,39 +1,39 @@
-import redis from "../config/redis.jd";
+import redis from "../config/redis.js";
+
 export const authMiddleware = async (req, res, next) => {
   try {
 
-   
+    const authHeader = req.headers.authorization;
 
-    
-    const token =JSON.parse(await redis.get(`auth:${token}`)) ;
-
-    console.log(
-      "authToken exists:",
-      !!token
-    );
-
-    if (!token) {
-
-    
+    if (!authHeader) {
       return res.status(401).json({
         message: "UnAuthorized login,Please Login First",
       });
     }
 
- 
+    const token = authHeader.split(" ")[1];
 
-    const decode = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+    if (!token) {
+      return res.status(401).json({
+        message: "Token not found",
+      });
+    }
 
-    req.user = decode;
+    const session = await redis.get(`auth:${token}`);
+
+    if (!session) {
+      return res.status(401).json({
+        message: "Invalid or Token Expire",
+      });
+    }
+
+    req.user = JSON.parse(session);
 
     next();
 
   } catch (error) {
 
-   
+    console.error(error.message);
 
     return res.status(401).json({
       message: "Invalid or Token Expire",

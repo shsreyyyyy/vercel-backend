@@ -32,7 +32,7 @@ if (!session) {
   });
 }
 
-req.user = JSON.parse(session);
+req.user =session;
 
     next();
 

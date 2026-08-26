@@ -8,36 +8,48 @@ export const authMiddleware = async (req, res, next) => {
 
     if (!authHeader) {
       return res.status(401).json({
-        message: "UnAuthorized login,Please Login First",
+        message: "Please login first",
       });
     }
 
-    const parts = authHeader.split(" ");
+    const token = authHeader.split(" ")[1];
 
-    if (parts.length !== 2 || parts[0] !== "Bearer") {
+    if (!token) {
       return res.status(401).json({
-        message: "Invalid Authorization format",
+        message: "Token not found",
       });
     }
 
-    const token = parts[1];
+    const session = await redis.get(`auth:${token}`);
 
-    console.log("TOKEN EXISTS:", !!token);
+    console.log("REDIS SESSION:", session);
 
-   const session = await redis.get(`auth:${token}`);
+    if (!session) {
+      return res.status(401).json({
+        message: "Invalid or Token Expire",
+      });
+    }
 
-if (!session) {
-  return res.status(401).json({
-    message: "Invalid or Token Expire",
-  });
-}
+    // Agar Redis string return kare
+    if (typeof session === "string") {
+      req.user = JSON.parse(session);
+    } 
+    // Agar Redis already object return kare
+    else if (typeof session === "object") {
+      req.user = session;
+    } 
+    else {
+      return res.status(401).json({
+        message: "Invalid session",
+      });
+    }
 
-req.user =session;
+    console.log("REQ.USER:", req.user);
 
     next();
 
   } catch (error) {
-    console.error("AUTH ERROR:", error);
+    console.error("AUTH ERROR:", error.message);
 
     return res.status(401).json({
       message: "Invalid or Token Expire",

@@ -69,41 +69,32 @@ export const loginUser = async (req, res) => {
 
     if (user.isVerified) {
       const token = jwt.sign(
-        { userId: user._id, email: user.email },
-        process.env.JWT_SECRET,
-        { expiresIn: "15m" },
-      );
+  {
+    userId: user._id,
+    email: user.email
+  },
+  process.env.JWT_SECRET,
+  {
+    expiresIn: "15m"
+  }
+);
 
-      const refreshToken = jwt.sign(
-        { userId: user._id },
-        process.env.JWT_REFRESH_TOKEN_SECRET,
-        { expiresIn: "7d" },
-      );
+await redis.set(
+  `auth:${token}`,
+  JSON.stringify({
+    userId: user._id,
+    email: user.email
+  }),
+  {
+    ex: 15 * 60
+  }
+);
 
-      await redis.set(
-        `auth:${token}`,
-        JSON.stringify({
-          userId: user._id,
-          email: user.email,
-        }),
-        {
-          ex: 15 * 60,
-        },
-      );
-
-      res.cookie("authToken", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: "/",
-        maxAge: 15 * 60 * 1000,
-      });
-
-      return res.status(200).json({
-        message: "Login Successfully",
-        requiresOtp: false,
-        token
-      });
+return res.status(200).json({
+  message: "Login Successfully",
+  requiresOtp: false,
+  token
+});
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();

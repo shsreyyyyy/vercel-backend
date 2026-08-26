@@ -81,10 +81,10 @@ export const loginUser = async (req, res) => {
 
 await redis.set(
   `auth:${token}`,
-  JSON.stringify({
-    userId: user._id,
+  {
+    userId: user._id.toString(),
     email: user.email
-  }),
+  },
   {
     ex: 15 * 60
   }

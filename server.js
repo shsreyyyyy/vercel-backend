@@ -15,7 +15,7 @@ import orderRoutes from "./Routes/order.js";
 const app = express();
 
 app.use(cors({
-  origin: "https://vercel-frontend-six-liart.vercel.app",
+  origin: process.env.FRONTEND_URL,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]

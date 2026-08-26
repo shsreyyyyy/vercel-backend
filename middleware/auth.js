@@ -5,7 +5,7 @@ export const authMiddleware = async (req, res, next) => {
    
 
     
-    const token = await redis.get(`auth:${token}`);
+    const token =JSON.parse(await redis.get(`auth:${token}`)) ;
 
     console.log(
       "authToken exists:",

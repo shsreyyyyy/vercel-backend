@@ -81,15 +81,16 @@ export const loginUser = async (req, res) => {
 
       res.cookie("authToken", token, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
         path: "/",
         maxAge: 5 * 60 * 1000,
       });
 
       res.cookie("refreshToken",refreshToken,{
         httpOnly:true,
-        secure:false,
+        secure:true,
+        sameSite:"none",
         path:"/",
         maxAge:7*24*60*60*1000
       })
@@ -116,8 +117,8 @@ export const loginUser = async (req, res) => {
 
     res.cookie("email", user.email, {
       httpOnly: true,
-      sameSite: "lax",
-      secure: false,
+      sameSite: "none",
+      secure: true,
       path: "/",
       maxAge: 5 * 60 * 1000,
     });
@@ -229,8 +230,8 @@ export const verifyOtp = async (req, res) => {
     await user.save();
     res.clearCookie("email", {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       path: "/",
     });
 
@@ -243,8 +244,8 @@ export const verifyOtp = async (req, res) => {
 
       res.cookie("authToken", token, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
         path: "/",
         maxAge: 24 * 60 * 60 * 1000,
       });
@@ -322,8 +323,8 @@ export const logout = async (req, res) => {
 
     res.clearCookie("authToken", {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       path: "/",
     });
 
@@ -386,8 +387,8 @@ export const forgotPassword = async (req, res) => {
 
     res.cookie("forgotEmail", email, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       path: "/",
       maxAge: 5 * 60 * 1000,
     });
@@ -530,8 +531,9 @@ export const refreshAccessToken=async(req,res,next)=>{
     })
     res.cookie("accessToken",newAccessToken,{
       httpOnly:true,
-      secure:false,
+      secure:true,
       path:"/",
+      sameSite:"none",
       maxAge:15*60*1000
     })
      return res.status(200).json({

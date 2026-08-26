@@ -1,33 +1,47 @@
-import jwt from "jsonwebtoken";
+import redis from "../config/redis.js";
 
-export const authMiddleware = (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.cookies.authToken;
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
+    console.log("AUTH HEADER:", authHeader);
+
+    if (!authHeader) {
       return res.status(401).json({
         message: "Please login first",
       });
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+    const token = authHeader.split(" ")[1];
 
+    if (!token) {
+      return res.status(401).json({
+        message: "Token not found",
+      });
+    }
 
-    req.user = {
-      id: decoded.userId,
-    };
+    const session = await redis.get(`auth:${token}`);
 
+    console.log("REDIS SESSION:", session);
+
+    if (!session) {
+      return res.status(401).json({
+        message: "Invalid or Token Expire",
+      });
+    }
+
+    // Redis se string aati hai, isliye JSON.parse
+    req.user = JSON.parse(session);
+
+    console.log("REQ.USER:", req.user);
 
     next();
 
   } catch (error) {
-    console.log(error);
+    console.error("AUTH ERROR:", error.message);
 
     return res.status(401).json({
-      message: "Invalid or expired token",
+      message: "Invalid or Token Expire",
     });
   }
 };

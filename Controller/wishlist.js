@@ -6,7 +6,8 @@ export const addWishlist = async (req, res) => {
   try {
     const { productId } = req.body;
 
-    const userId = req.user.id;
+    const userId = req.user.userId;
+
     console.log("User ID:", userId);
     console.log("Product ID:", productId);
 
@@ -50,7 +51,7 @@ export const addWishlist = async (req, res) => {
 // GET WISHLIST
 export const getWishlist = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const wishlist = await Wishlist.find({ userId })
       .populate("productId");
@@ -73,7 +74,7 @@ export const removeWishlist = async (req, res) => {
   try {
     const { productId } = req.body;
 
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const wishlist = await Wishlist.findOneAndDelete({
       userId,

@@ -78,15 +78,14 @@ export const loginUser = async (req, res) => {
     expiresIn: "15m"
   }
 );
-
 await redis.set(
   `auth:${token}`,
-  {
-    userId: user._id.toString(),
+  JSON.stringify({
+    userId: user._id,
     email: user.email
-  },
+  }),
   {
-    ex: 15 * 60
+    ex: 7 * 24 * 60 * 60
   }
 );
 

@@ -18,7 +18,7 @@ const app = express();
 const port = 3000;
 
 app.use(cors({
-  origin:process.env.FRONTEND_URL,
+  origin:"https://vercel-frontend-six-liart.vercel.app",
   credentials:true
 }));
 

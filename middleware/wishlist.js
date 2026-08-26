@@ -30,8 +30,18 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Redis se string aati hai, isliye JSON.parse
-    req.user = JSON.parse(session);
+     if (typeof session === "string") {
+      req.user = JSON.parse(session);
+    } 
+    // Agar Redis already object return kare
+    else if (typeof session === "object") {
+      req.user = session;
+    } 
+    else {
+      return res.status(401).json({
+        message: "Invalid session",
+      });
+    }
 
     console.log("REQ.USER:", req.user);
 

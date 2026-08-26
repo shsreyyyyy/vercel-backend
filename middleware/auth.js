@@ -27,7 +27,7 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
 
-    req.user =session;
+    req.user =JSON.parse(session);
 
     next();
 

@@ -71,13 +71,24 @@ export const loginUser = async (req, res) => {
       const token = jwt.sign(
         { userId: user._id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: "5m" },
+        { expiresIn: "15m" },
       );
 
       const refreshToken = jwt.sign(
         { userId: user._id },
         process.env.JWT_REFRESH_TOKEN_SECRET,
-        { expiresIn: "7d" }
+        { expiresIn: "7d" },
+      );
+
+      await redis.set(
+        `auth:${token}`,
+        JSON.stringify({
+          userId: user._id,
+          email: user.email,
+        }),
+        {
+          ex: 15 * 60,
+        },
       );
 
       res.cookie("authToken", token, {
@@ -85,15 +96,7 @@ export const loginUser = async (req, res) => {
         secure: true,
         sameSite: "none",
         path: "/",
-        maxAge: 5 * 60 * 1000,
-      });
-
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 15 * 60 * 1000,
       });
 
       return res.status(200).json({
@@ -104,9 +107,9 @@ export const loginUser = async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await redis.set(`verify:${email}`,email,{
-      ex:300
-    })
+    await redis.set(`verify:${email}`, email, {
+      ex: 300,
+    });
     await redis.set(`otp:${email}`, otp, {
       ex: 300,
     });
@@ -144,9 +147,9 @@ export const loginUser = async (req, res) => {
 
 export const otpTimer = async (req, res) => {
   try {
-  //  const email = req.cookies.email;
-  const localEmail=req.query.email
-  const email=await redis.get(`verify:${localEmail}`)
+    //  const email = req.cookies.email;
+    const localEmail = req.query.email;
+    const email = await redis.get(`verify:${localEmail}`);
 
     if (!email) {
       return res.status(200).json({
@@ -174,8 +177,8 @@ export const otpTimer = async (req, res) => {
 
 export const verifyOtp = async (req, res) => {
   try {
-    const { email,otp } = req.body;
-   // const email = req.cookies.email;
+    const { email, otp } = req.body;
+    // const email = req.cookies.email;
 
     if (!email) {
       return res.status(400).json({
@@ -225,7 +228,7 @@ export const verifyOtp = async (req, res) => {
 
       if (attempts >= 3) {
         await redis.set(lockKey, "locked", {
-          ex: 60 * 60
+          ex: 60 * 60,
         });
 
         await redis.del(attemptKey);
@@ -240,7 +243,7 @@ export const verifyOtp = async (req, res) => {
       });
     }
 
-    await redis.del(`verify:${email}`)
+    await redis.del(`verify:${email}`);
     await redis.del(`otp:${email}`);
     await redis.del(`otpAttempts:${email}`);
 
@@ -261,6 +264,16 @@ export const verifyOtp = async (req, res) => {
         { expiresIn: "1d" },
       );
 
+      await redis.set(
+        `auth:${token}`,
+        JSON.stringify({
+          userId: user._id,
+          email: user.email,
+        }),
+        {
+          ex: 15 * 60,
+        },
+      );
       res.cookie("authToken", token, {
         httpOnly: true,
         secure: true,
@@ -282,9 +295,9 @@ export const verifyOtp = async (req, res) => {
 
 export const resendOtp = async (req, res) => {
   try {
-  //  const email = req.cookies.email;
-  const localEmail=req.query.email;
-  const email=await redis.get(`verify:${localEmail}`)
+    //  const email = req.cookies.email;
+    const localEmail = req.query.email;
+    const email = await redis.get(`verify:${localEmail}`);
 
     if (!email) {
       return res.status(400).json({
@@ -497,13 +510,13 @@ export const updatePassword = async (req, res) => {
 
     if (!password || !rePassword) {
       return res.status(400).json({
-        message: "Please Provide Both Password"
+        message: "Please Provide Both Password",
       });
     }
 
     if (password !== rePassword) {
       return res.status(401).json({
-        message: "Both Password Doesn't Match, PLease Try To Re-Enter"
+        message: "Both Password Doesn't Match, PLease Try To Re-Enter",
       });
     }
 
@@ -511,17 +524,17 @@ export const updatePassword = async (req, res) => {
 
     const user = await User.findOneAndUpdate(
       { email },
-      { password: hashedPassword }
+      { password: hashedPassword },
     );
 
     if (!user) {
       return res.status(401).json({
-        message: "User Not Register In Database"
+        message: "User Not Register In Database",
       });
     }
 
     return res.status(200).json({
-      message: "Password Update Successfully"
+      message: "Password Update Successfully",
     });
   } catch (error) {
     return res.status(500).json({
@@ -564,40 +577,44 @@ export const refreshAccessToken = async (req, res, next) => {
 
     if (!refreshToken) {
       return res.status(401).json({
-        message: "token not found"
+        message: "token not found",
       });
     }
 
     const decode = jwt.verify(
       refreshToken,
-      process.env.JWT_REFRESH_TOKEN_SECRET
+      process.env.JWT_REFRESH_TOKEN_SECRET,
     );
 
     const user = await User.findById(decode.userId);
 
     if (!user) {
       return res.status(400).json({
-        message: "user not find"
+        message: "user not find",
       });
     }
 
-    const newAccessToken = jwt.sign({
-      userId: user._id,
-      email: user.email
-    }, process.env.JWT_ACCESS_TOKEN, {
-      expiresIn: "15m"
-    });
+    const newAccessToken = jwt.sign(
+      {
+        userId: user._id,
+        email: user.email,
+      },
+      process.env.JWT_ACCESS_TOKEN,
+      {
+        expiresIn: "15m",
+      },
+    );
 
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       secure: true,
       path: "/",
       sameSite: "none",
-      maxAge: 15 * 60 * 1000
+      maxAge: 15 * 60 * 1000,
     });
 
     return res.status(200).json({
-      message: "access token refresh successfully"
+      message: "access token refresh successfully",
     });
   } catch (error) {
     return res.status(500).json({
@@ -608,7 +625,6 @@ export const refreshAccessToken = async (req, res, next) => {
 
 export const getProfile = async (req, res) => {
   try {
-
     const user = await User.findById(req.user.userId).select("-password");
 
     if (!user) {
@@ -621,13 +637,10 @@ export const getProfile = async (req, res) => {
       message: "Profile fetched successfully",
       user,
     });
-
   } catch (error) {
-
     return res.status(500).json({
       message: error.message,
     });
-
   }
 };
 
@@ -637,12 +650,12 @@ export const getUserCount = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      totalUsers
+      totalUsers,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };

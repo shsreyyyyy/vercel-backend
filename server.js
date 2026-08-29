@@ -24,7 +24,7 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/youtube/user", userRoutes);
+app.use("/user", userRoutes);
 app.use("/user/cart", cartRoutes);
 app.use("/admin", adminRoutes);
 app.use("/product", productRoutes);
